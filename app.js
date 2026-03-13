@@ -77,12 +77,30 @@ if (cloudModal) {
 
 if (btnSaveCloud) {
     btnSaveCloud.addEventListener('click', () => {
-        cloudApiUrl = cloudUrlInput.value.trim();
+        let url = cloudUrlInput.value.trim();
+        
+        if (!url) {
+            cloudApiUrl = '';
+            localStorage.removeItem('taskflow_cloud_api');
+            hideCloudModal();
+            return;
+        }
+
+        // URL Validation Warning
+        if (url.includes('docs.google.com/spreadsheets')) {
+            alert('❌ ใส่ลิงก์ผิดประเภทครับ!\nคุณนำลิงก์ของหน้าตาราง Google Sheet มาใส่\n\nต้องไปที่แท็บ "ส่วนขยาย > Apps Script" แล้วกด Deploy (การทำให้ใช้งานได้) แล้วนำลิงก์ "เว็บแอป" มาใส่ครับ');
+            return;
+        }
+        
+        if (!url.startsWith('https://script.google.com/macros/s/')) {
+            alert('❌ ลิงก์ไม่ถูกต้อง!\nURL ต้องขึ้นต้นด้วย https://script.google.com/macros/s/...\nกรุณากลับไปก๊อปปี้ลิงก์ Web App ใหม่อีกครั้งครับ');
+            return;
+        }
+
+        cloudApiUrl = url;
         localStorage.setItem('taskflow_cloud_api', cloudApiUrl);
         hideCloudModal();
-        if (cloudApiUrl !== '') {
-            syncFromCloud(activeProfileId);
-        }
+        syncFromCloud();
     });
 }
 
@@ -106,33 +124,77 @@ function updateSyncStatusUI(status, message) {
 async function syncToCloud() {
     if (!cloudApiUrl) return;
     try {
-        updateSyncStatusUI('syncing', 'Syncing...');
-        await fetch(cloudApiUrl, {
+        updateSyncStatusUI('syncing', 'Syncing to Cloud...');
+        
+        const allTasks = {};
+        for (const prof of profiles) {
+            allTasks[prof.id] = JSON.parse(localStorage.getItem(`taskflow_tasks_${prof.id}`)) || [];
+        }
+
+        const response = await fetch(cloudApiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
-                action: 'saveTasks',
-                profileId: activeProfileId,
-                tasks: tasks
+                action: 'saveData',
+                profiles: profiles,
+                tasks: allTasks
             })
         });
-        updateSyncStatusUI('success', 'Synced');
+        
+        if (!response.ok) throw new Error("HTTP Status Error");
+        updateSyncStatusUI('success', 'Cloud Synced!');
     } catch (err) {
         console.error("Cloud Error:", err);
         updateSyncStatusUI('error', 'Sync Failed');
     }
 }
 
-async function syncFromCloud(profileId) {
+async function syncFromCloud() {
     if (!cloudApiUrl) return;
     try {
-        updateSyncStatusUI('syncing', 'Fetching...');
-        const res = await fetch(`${cloudApiUrl}?action=getTasks&profileId=${profileId}`);
+        updateSyncStatusUI('syncing', 'Fetching Data...');
+        const res = await fetch(`${cloudApiUrl}?action=getData`);
+        
+        // Handle Google Apps authentication/HTML redirect error pages
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("text/html")) {
+            throw new Error("HTML_RECEIVED");
+        }
+
         const data = await res.json();
         
-        if (data && Array.isArray(data)) {
-            tasks = data;
-            localStorage.setItem(`taskflow_tasks_${profileId}`, JSON.stringify(tasks));
+        if (data && data.profiles && data.tasks) {
+            // MAGIC FIX: If Google Sheet is completely empty, it means we must upload our local tasks there!
+            if (data.profiles.length === 0 && Object.keys(data.tasks).length === 0) {
+                console.log("Cloud is fresh/empty. Starting initial push to cloud...");
+                await syncToCloud();
+                return;
+            }
+
+            // Reconstruct profiles
+            if (Array.isArray(data.profiles) && data.profiles.length > 0) {
+                profiles = data.profiles;
+                localStorage.setItem('taskflow_profiles', JSON.stringify(profiles));
+            }
+            
+            // Validate if activeProfileId still exists, otherwise default to first
+            const profileExists = profiles.find(p => p.id === activeProfileId);
+            if (!profileExists) {
+                activeProfileId = profiles[0].id;
+                localStorage.setItem('taskflow_active_profile', activeProfileId);
+            }
+
+            // Sync all tasks over
+            for (const profId in data.tasks) {
+                localStorage.setItem(`taskflow_tasks_${profId}`, JSON.stringify(data.tasks[profId]));
+            }
+            
+            // Reload active tasks
+            tasks = JSON.parse(localStorage.getItem(`taskflow_tasks_${activeProfileId}`)) || [];
+            
+            // Update UI
+            if (profileDropdown) renderProfiles();
+            if (profileListContainer) renderProfilesList();
             renderTasks();
             updateCategoryOptions();
             if (document.getElementById('view-dashboard').classList.contains('active')) updateDashboard();
@@ -142,6 +204,9 @@ async function syncFromCloud(profileId) {
         }
     } catch (err) {
          console.error("Cloud Error:", err);
+         if (err.message === "HTML_RECEIVED") {
+             alert("❌ เชื่อมต่อล้มเหลว!\nโปรดตรวจสอบตอนที่คุณกด Deploy สิทธิ์การเข้าถึง (Who has access) ต้องตั้งเป็น 'ทุกคน (Anyone)' เท่านั้นครับ");
+         }
          updateSyncStatusUI('error', 'Fetch Failed');
     }
 }
@@ -257,6 +322,9 @@ window.deleteProfile = function(id) {
 
 function saveProfiles() {
     localStorage.setItem('taskflow_profiles', JSON.stringify(profiles));
+    if (cloudApiUrl) {
+        syncToCloud();
+    }
 }
 
 function switchProfile(id) {
@@ -275,7 +343,8 @@ function switchProfile(id) {
     
     // Sync from cloud if configured
     if (cloudApiUrl) {
-        syncFromCloud(id);
+        // Just reload tasks if we are switching, normally we'd fetch all again, but let's fetch to be safe
+        syncFromCloud();
     }
 }
 
