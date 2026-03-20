@@ -58,6 +58,11 @@ const btnCreateProfile = document.getElementById('btn-create-profile');
 const newProfileName = document.getElementById('new-profile-name');
 const profileListContainer = document.getElementById('profile-list-container');
 
+// --- Mobile Sidebar Elements ---
+const sidebar = document.querySelector('.sidebar');
+const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+
 // --- Cloud Sync API ---
 if (btnCloudSettings) {
     btnCloudSettings.addEventListener('click', () => {
@@ -431,8 +436,28 @@ navItems.forEach(item => {
             pageSubtitle.innerText = 'Manage and track all your tasks here.';
             renderTasks();
         }
+        
+        // Close sidebar on mobile after clicking
+        if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        }
     });
 });
+
+// --- Mobile Sidebar Handling ---
+if (btnToggleSidebar) {
+    btnToggleSidebar.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('active');
+    });
+}
+if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+    });
+}
 
 // --- Modal Handling ---
 function openModal(taskId = null) {

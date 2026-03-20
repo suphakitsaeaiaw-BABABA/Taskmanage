@@ -13,6 +13,7 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 </head>
 <body>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -64,9 +65,12 @@
         <main class="main-content">
             <!-- Header -->
             <header class="top-header">
-                <div>
-                    <h1 id="page-title">Dashboard</h1>
-                    <p class="subtitle" id="page-subtitle">Welcome back! Here is your task summary.</p>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="btn-toggle-sidebar" id="btn-toggle-sidebar" title="Menu"><i class="ph ph-list"></i></button>
+                    <div>
+                        <h1 id="page-title">Dashboard</h1>
+                        <p class="subtitle" id="page-subtitle">Welcome back! Here is your task summary.</p>
+                    </div>
                 </div>
                 <div class="header-actions" style="display: flex; align-items: center; gap: 1rem;">
                     <div id="cloud-sync-status" style="display: none; font-size: 0.85rem; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border-radius: 20px; background: rgba(0,0,0,0.2);">
