@@ -58,10 +58,56 @@ const btnCreateProfile = document.getElementById('btn-create-profile');
 const newProfileName = document.getElementById('new-profile-name');
 const profileListContainer = document.getElementById('profile-list-container');
 
+// --- Profile Picture Elements ---
+const profileUpload = document.getElementById('profile-upload');
+const userProfileImg = document.getElementById('user-profile-img');
+
+if (userProfileImg) {
+    const savedPic = localStorage.getItem('taskflow_profile_pic');
+    if (savedPic) {
+        userProfileImg.src = savedPic;
+    }
+}
+
+if (profileUpload) {
+    profileUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                if (userProfileImg) userProfileImg.src = dataUrl;
+                localStorage.setItem('taskflow_profile_pic', dataUrl);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
 // --- Mobile Sidebar Elements ---
 const sidebar = document.querySelector('.sidebar');
 const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
 const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+// --- Theme Elements ---
+const themeBtns = document.querySelectorAll('.theme-btn');
+const rootElement = document.documentElement;
+
+const savedTheme = localStorage.getItem('taskflow_theme') || 'red';
+rootElement.setAttribute('data-theme', savedTheme);
+
+themeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const theme = btn.getAttribute('data-set-theme');
+        rootElement.setAttribute('data-theme', theme);
+        localStorage.setItem('taskflow_theme', theme);
+        if (typeof updateDashboard === 'function') updateDashboard();
+    });
+});
+
+function getThemeColor(varName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
 
 // --- Cloud Sync API ---
 if (btnCloudSettings) {
@@ -934,7 +980,12 @@ function updateDashboard() {
             labels: ['To Do', 'In Progress', 'Done', 'Close'],
             datasets: [{
                 data: [todo, inProgress, completed, closed],
-                backgroundColor: ['#64748b', '#eab308', '#22c55e', '#475569'],
+                backgroundColor: [
+                    getThemeColor('--status-todo') || '#52525b', 
+                    getThemeColor('--status-progress') || '#ea580c', 
+                    getThemeColor('--status-done') || '#16a34a', 
+                    getThemeColor('--status-close') || '#27272a'
+                ],
                 borderWidth: 0,
                 hoverOffset: 4
             }]
@@ -961,7 +1012,11 @@ function updateDashboard() {
             labels: ['High', 'Medium', 'Low'],
             datasets: [{
                 data: [high, medium, low],
-                backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
+                backgroundColor: [
+                    getThemeColor('--overdue-color') || '#dc2626', 
+                    getThemeColor('--status-progress') || '#ea580c', 
+                    '#3b82f6'
+                ],
                 borderWidth: 0,
                 hoverOffset: 4
             }]
@@ -996,7 +1051,7 @@ function updateDashboard() {
             datasets: [{
                 label: 'Active Tasks',
                 data: categoryData,
-                backgroundColor: '#8b5cf6',
+                backgroundColor: getThemeColor('--primary') || '#dc2626',
                 borderRadius: 4
             }]
         },

@@ -58,11 +58,19 @@
                     </button>
                     <input type="file" id="import-file-input" accept=".json" style="display: none;">
                 </div>
+                
+                <div class="theme-selector" style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1.5rem;">
+                    <button class="theme-btn" data-set-theme="original" style="background:#0f172a; border:2px solid #6366f1; width:28px; height:28px; border-radius:50%; cursor:pointer;" title="Original Theme"></button>
+                    <button class="theme-btn" data-set-theme="red" style="background:#09090b; border:2px solid #dc2626; width:28px; height:28px; border-radius:50%; cursor:pointer;" title="Red Theme (Default)"></button>
+                    <button class="theme-btn" data-set-theme="dark" style="background:#121212; border:2px solid #3b82f6; width:28px; height:28px; border-radius:50%; cursor:pointer;" title="Dark Mode Theme"></button>
+                    <button class="theme-btn" data-set-theme="green" style="background:#0f1115; border:2px solid #10b981; width:28px; height:28px; border-radius:50%; cursor:pointer;" title="Green Theme"></button>
+                    <button class="theme-btn" data-set-theme="pink" style="background:#0e0b0d; border:2px solid #ec4899; width:28px; height:28px; border-radius:50%; cursor:pointer;" title="Pink Theme"></button>
+                </div>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content bg-gradient-radial">
             <!-- Header -->
             <header class="top-header">
                 <div style="display: flex; align-items: center; gap: 1rem;">
@@ -76,9 +84,12 @@
                     <div id="cloud-sync-status" style="display: none; font-size: 0.85rem; align-items: center; gap: 0.4rem; padding: 0.4rem 0.8rem; border-radius: 20px; background: rgba(0,0,0,0.2);">
                          <i class="ph ph-arrows-clockwise ph-spin"></i> Syncing...
                     </div>
-                    <button class="btn-icon" id="btn-cloud-settings" style="cursor: pointer; background: rgba(99, 102, 241, 0.1); color: #818cf8; width: 40px; height: 40px; border-radius: 50%; outline: none; border: none; display: flex; align-items: center; justify-content: center;" title="Cloud Database Settings"><i class="ph ph-cloud-arrow-up" style="font-size: 1.25rem;"></i></button>
+                    <button class="btn-icon icon-primary-subtle" id="btn-cloud-settings" style="cursor: pointer; width: 40px; height: 40px; border-radius: 50%; outline: none; border: none; display: flex; align-items: center; justify-content: center;" title="Cloud Database Settings"><i class="ph ph-cloud-arrow-up" style="font-size: 1.25rem;"></i></button>
                     <div class="user-profile">
-                        <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="User">
+                        <label for="profile-upload" style="cursor: pointer;" title="Change Profile Picture">
+                            <img src="https://ui-avatars.com/api/?name=User&background=dc2626&color=fff" alt="User" id="user-profile-img">
+                        </label>
+                        <input type="file" id="profile-upload" accept="image/*" style="display: none;">
                     </div>
                 </div>
             </header>
@@ -87,7 +98,7 @@
             <section id="view-dashboard" class="view-section active">
                 <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: #818cf8;">
+                        <div class="stat-icon icon-primary-subtle">
                             <i class="ph ph-list-dashes"></i>
                         </div>
                         <div class="stat-info">
@@ -96,8 +107,8 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(234, 179, 8, 0.1); color: #facc15;">
-                            <i class="ph ph-hourglass-high"></i>
+                        <div class="stat-icon icon-progress-subtle">
+                            <i class="ph ph-clock-countdown"></i>
                         </div>
                         <div class="stat-info">
                             <h3>In Progress</h3>
@@ -105,7 +116,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(34, 197, 94, 0.1); color: #4ade80;">
+                        <div class="stat-icon icon-done-subtle">
                             <i class="ph ph-check-circle"></i>
                         </div>
                         <div class="stat-info">
@@ -114,7 +125,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                        <div class="stat-icon icon-overdue-subtle">
                             <i class="ph ph-warning-circle"></i>
                         </div>
                         <div class="stat-info">
